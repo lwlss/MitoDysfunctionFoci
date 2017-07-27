@@ -255,16 +255,24 @@ for(i in seq_along(section_ids)){
 predicted_fractions=focal_fractions*nuclear_fractions
 maxfrac=max(c(overlap_fractions,predicted_fractions))
 patientno=as.numeric(substr(section_ids,6,7))
+
+# Summary
+pdf(paste(froot,ifelse(foctype=="Focus","_SUMMARY_auto_class.pdf","_SUMMARY_manual_class.pdf"),sep=""),width=10,height=5)
 op=par(mfrow=c(1,2))
 plot(NULL,xlab="Observed overlap between focal and perinuclear regions",ylab="Predicted overlap, assuming random locations",xlim=c(0,maxfrac),ylim=c(0,maxfrac),main="Focal fibre section perimeters")
-abline(a=0,b=1,col="red",lwd=3,lty=2)
-points(overlap_fractions,predicted_fractions,pch=16,cex=0.5,col=patientno)
-text(overlap_fractions,predicted_fractions,gsub("Foci","",section_ids),cex=0.35,pos=2,offset=0.25)
-legend("topleft",col=unique(patientno),legend=paste("Patient",unique(patientno)),pch=16,cex=0.5)
+abline(a=0,b=1,col="darkgrey",lwd=3,lty=2)
+clist=c("black","red","blue")
+points(overlap_fractions,predicted_fractions,pch=16,cex=1.25,col=clist[patientno])
+#text(overlap_fractions,predicted_fractions,gsub("Foci","",section_ids),cex=0.35,pos=2,offset=0.25)
+legend("bottomright",col=clist[unique(patientno)],legend=paste("Patient",unique(patientno)),pch=16,pt.cex=1.25)
 res = t.test(predicted_fractions-overlap_fractions)
-hist(predicted_fractions-overlap_fractions,breaks=15,xlab="Predicted overlap - Observed overlap",main=paste("Alternative hypothesis: mean difference in overlap fraction is equal to zero\np-value:",formatC(res$p.value,4)))
-abline(v=0,col="red",lwd=3)
+hist(predicted_fractions-overlap_fractions,breaks=15,xlab="Predicted - Observed",main=paste("p-value:",formatC(res$p.value,4)))
+abline(v=0,col="darkgrey",lwd=3,lty=2)
 par(op)
+dev.off()
+
+# Plot each section separately
+pdf(paste(froot,ifelse(foctype=="Focus","_SEPARATE_auto_class.pdf","_SEPARATE_manual_class.pdf"),sep=""),width=16,height=8)
 
 op=par(mfrow=c(3,1),mai=c(0.25,0.75,0.35,1),oma=c(3,0,0,0))
 if(foctype=="Focus") clabs = sort(unique(dat$CellLabel))
@@ -278,6 +286,16 @@ for(i in seq_along(clabs)){
 par(op)
 dev.off()
 
+# Plot one section
+pdf(paste(froot,ifelse(foctype=="Focus","_INDIVIDUAL_auto_class.pdf","_INDIVIDUAL_manual_class.pdf"),sep=""),width=8,height=8)
+op=par(mai=c(0.25,0.75,0.35,1),oma=c(3,0,0,0))
+  cl="FociP01S02"
+  dt = dat[dat$CellLabel==cl,]
+  mkplt(mlab=cl,foctype=foctype,counter=ifelse(i==length(clabs),3,i))
+  legend("topright",lwd=1,legend=c("DAPI",ifelse(focdef=="Ratio","MTCOI/SDHA","SDHA-MTCOI")),col=c("blue","red"),bg="white")
+par(op)
+dev.off()
+
 # Test for over-representation of foci in perinuclear region of muscle fibre perimeters marked "foci": early development of mito deficiency
 dt = dat[dat$CellType=="Foci",]
 dt = findRegions(dt,DAPI_cutoff,Ratio_cutoff,Diff_cutoff,focdef=focdef,wind=wind,minFlen=fmin,maxFlen=999999999999999)
@@ -288,3 +306,5 @@ FnP=sum(dt[[foctype]]&dt$PerinuclearRegion)
 
 hypertest(FnP,F,P,P+S)
 binomtest(FnP,F,P/(P+S))
+
+
