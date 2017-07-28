@@ -90,10 +90,7 @@ dat=dat[!is.na(dat$DAPI),]
 
 focdef="Diff"
 
-#dat$CellType=substring(dat$CellLabel,1,nchar(dat$CellLabel)-1)
-#dat$RepNo=substring(dat$CellLabel,nchar(dat$CellLabel),nchar(dat$CellLabel))
 dat$CellType=sub("[^[:alpha:]]+", "", dat$CellLabel)
-#dat$RepNo=as.numeric(gsub("[^\\d]+", "", dat$CellLabel, perl=TRUE))
 dat$CellLabel=gsub("_","S",gsub("Foci","FociP",dat$CellLabel))
 nd=c()
 for(ct in unique(dat$CellType)){
@@ -117,39 +114,23 @@ dat$DAPI = dat$DAPI-DAPIdict[dat$CellLabel]
 dat$Diff = dat$SDHA-dat$MTCOI
 dat$Ratio = dat$MTCOI/dat$SDHA
 delta = dat$Distance[2]-dat$Distance[1]
-#dat$SumDist = (0:(length(dat$Distance)-1))*delta
-#DiffMod = loess(Diff ~ SumDist, data = dat, span = 0.001)
-#RatMod = loess(Ratio ~ SumDist, data = dat, span = 0.001)
-#dat$Diff = predict(DiffMod, data = dat)
-#dat$Ratio = predict(RatMod, data = dat)
 
 DAPI_cutoff = quantile(dat$DAPI,0.85)
 Diff_cutoff = quantile(dat$Diff[dat$CellType=="Pos"],0.998)
 Ratio_cutoff = quantile(dat$Ratio[dat$CellType=="Pos"],0.001)
-#Diff_cutoff = max(dat$Diff[dat$CellType=="Pos"])
-#Ratio_cutoff = min(dat$Ratio[dat$CellType=="Pos"])
 wind = 24
 
 cutDiff = makeTest(dat,"Diff",wind)
 cuts = seq(0,max(dat$Diff),length.out=5000)
 res = sapply(cuts,cutDiff)
-#Diff_cutoff = cuts[which.max(res)]
-#plot(cuts,res,xlab = "Cutoff",ylab="Diff",type="l",lwd=2)
-#abline(v = Diff_cutoff, col="red", lwd = 3)
 
 cutRatio = makeTest(dat,"Ratio",wind)
 cuts = seq(0,max(dat$Ratio),length.out=5000)
 res = sapply(cuts,cutRatio)
-#Ratio_cutoff = cuts[which.max(res)]
-#plot(cuts,res,xlab = "Cutoff",ylab="Ratio",type="l",lwd=2)
-#abline(v = Ratio_cutoff, col="red", lwd = 3)
 
 dat=findRegions(dat,DAPI_cutoff,Ratio_cutoff,Diff_cutoff,focdef=focdef)
 
 boxplot(Diff~CellType,data=dat)
-
-# New focus definition for Foci cells
-#dat$Focus[dat$CellType=="Foci"]=(dat$Diff>(dat$SDHA.1-dat$MTCOI.1))[dat$CellType=="Foci"]
 
 alpha=0.25
 cols=c(rgb(1,0,0,alpha),rgb(0,0,1,alpha),rgb(0,1,0,alpha))
@@ -164,7 +145,6 @@ frange=quantile(fl$Focus,c(0.025,0.975))/delt
 fmin=frange[1]
 fmax=frange[2]
 
-
 head(dat)
 
 mkplt = function(mlab="",foctype="Focus",counter=1){
@@ -177,8 +157,6 @@ mkplt = function(mlab="",foctype="Focus",counter=1){
    }
   }else{dt$SumDist=dt$Distance}
   starts=dt[(dt$Distance==0.0)&(dt$SumDist>0),]
-  #RatMod = loess(Ratio ~ SumDist, data = dt, span = 0.01)
-  #dt$Ratio = predict(RatMod, data = dt)
 
   if(mlab=="") {
      mainlab=paste(ct," (N = ",Ncells,")",sep="")
@@ -217,9 +195,6 @@ pdf(paste(froot,ifelse(foctype=="Focus","_OVERVIEW_auto_class.pdf","_OVERVIEW_ma
 # Where should we segment Diff?
 dneg=density(dat$Diff[dat$CellType=="Neg"])
 dpos=density(dat$Diff[dat$CellType=="Pos"])
-#plot(dneg,ylim=c(0,max(c(dneg$y,dpos$y))))
-#points(dpos,type="l",col="blue")
-#abline(v=dneg$x[which.max(dneg$y)],col="red",lwd=3)
 
 op=par(mfrow=c(3,1),mai=c(0.25,0.75,0.35,1),oma=c(3,0,0,0))
 cts=unique(dat$CellType)
