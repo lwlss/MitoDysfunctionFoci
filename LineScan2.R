@@ -227,6 +227,8 @@ for(i in seq_along(section_ids)){
   overlap_fractions[i]=FnP/(P+S)
 }
 
+dev.off()
+
 predicted_fractions=focal_fractions*nuclear_fractions
 maxfrac=max(c(overlap_fractions,predicted_fractions))
 patientno=as.numeric(substr(section_ids,6,7))
