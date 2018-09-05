@@ -1,4 +1,7 @@
-library(caTools)
+if(!require("caTools")) {
+  install.packages("caTools")
+  library(caTools)
+}
 
 # https://twitter.com/robustgar/status/798962929475457024
 effectsize=function(x,y){
